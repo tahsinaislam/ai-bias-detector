@@ -5,6 +5,7 @@ export interface RecentTest {
   date: string;
   score: number;
   testType: string;
+  userId: string;
   details?: Record<string, unknown>;
 }
 
@@ -24,6 +25,7 @@ export interface TestResult {
   templateId: number;
   result: 'PASS' | 'FAIL' | 'WARNING';
   notes: string;
+  userId: string;
   timestamp: string;
 }
 
@@ -33,6 +35,7 @@ export interface Review {
   rating: number;
   comment: string;
   author: string;
+  userId: string;
   timestamp: string;
 }
 
@@ -106,6 +109,7 @@ export const addRecentTest = (
   name: string, 
   score: number,
   testType: string,
+  userId: string,
   details: Record<string, unknown> = {}
 ): number => {
   try {
@@ -117,11 +121,12 @@ export const addRecentTest = (
       date: new Date().toISOString(),
       score,
       testType,
+      userId,
       details
     };
     
     recentTests.push(newTest);
-    console.log(`Added test ${id}: ${name}`);
+    console.log(`Added test ${id}: ${name} for user ${userId}`);
     return id;
   } catch (error) {
     console.error('Error adding test:', error);
@@ -129,9 +134,10 @@ export const addRecentTest = (
   }
 };
 
-export const getRecentTests = (limit: number = 5): RecentTest[] => {
+export const getRecentTests = (userId: string, limit: number = 5): RecentTest[] => {
   try {
     return [...recentTests]
+      .filter(test => test.userId === userId)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, limit);
   } catch (error) {
@@ -140,9 +146,9 @@ export const getRecentTests = (limit: number = 5): RecentTest[] => {
   }
 };
 
-export const getTestById = (id: number): RecentTest | null => {
+export const getTestById = (id: number, userId: string): RecentTest | null => {
   try {
-    return recentTests.find(test => test.id === id) || null;
+    return recentTests.find(test => test.id === id && test.userId === userId) || null;
   } catch (error) {
     console.error('Error getting test by ID:', error);
     return null;
@@ -154,6 +160,7 @@ export const addTestResult = (
   testId: number,
   templateId: number,
   result: 'PASS' | 'FAIL' | 'WARNING',
+  userId: string,
   notes: string = ''
 ): number => {
   try {
@@ -165,11 +172,12 @@ export const addTestResult = (
       templateId,
       result,
       notes,
+      userId,
       timestamp: new Date().toISOString()
     };
     
     testResults.push(newResult);
-    console.log(`Added test result ${id} for test ${testId}`);
+    console.log(`Added test result ${id} for test ${testId} by user ${userId}`);
     return id;
   } catch (error) {
     console.error('Error adding test result:', error);
@@ -177,10 +185,10 @@ export const addTestResult = (
   }
 };
 
-export const getTestResults = (testId: number): TestResult[] => {
+export const getTestResults = (testId: number, userId: string): TestResult[] => {
   try {
     return testResults
-      .filter(result => result.testId === testId)
+      .filter(result => result.testId === testId && result.userId === userId)
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   } catch (error) {
     console.error('Error getting test results:', error);
@@ -212,6 +220,7 @@ export const addReview = (
   appName: string,
   rating: number,
   comment: string,
+  userId: string,
   author: string = 'Anonymous'
 ): number => {
   try {
@@ -223,11 +232,12 @@ export const addReview = (
       rating,
       comment,
       author,
+      userId,
       timestamp: new Date().toISOString()
     };
     
     reviews.push(newReview);
-    console.log(`Added review ${id} for app ${appName}`);
+    console.log(`Added review ${id} for app ${appName} by user ${userId}`);
     return id;
   } catch (error) {
     console.error('Error adding review:', error);
@@ -235,13 +245,19 @@ export const addReview = (
   }
 };
 
-export const getReviews = (appName?: string): Review[] => {
+export const getReviews = (options?: { appName?: string; userId?: string }): Review[] => {
   try {
     let filteredReviews = [...reviews];
     
-    if (appName) {
+    if (options?.appName) {
       filteredReviews = filteredReviews.filter(
-        review => review.appName.toLowerCase().includes(appName.toLowerCase())
+        review => review.appName.toLowerCase().includes((options.appName ?? '').toLowerCase())
+      );
+    }
+    
+    if (options?.userId) {
+      filteredReviews = filteredReviews.filter(
+        review => review.userId === options.userId
       );
     }
     
@@ -254,9 +270,14 @@ export const getReviews = (appName?: string): Review[] => {
   }
 };
 
-export const getAverageRating = (appName: string): number | null => {
+export const getAverageRating = (appName: string, userId?: string): number | null => {
   try {
-    const appReviews = reviews.filter(review => review.appName === appName);
+    let appReviews = reviews.filter(review => review.appName === appName);
+    
+    if (userId) {
+      appReviews = appReviews.filter(review => review.userId === userId);
+    }
+    
     if (appReviews.length === 0) return null;
     
     const total = appReviews.reduce((sum, review) => sum + review.rating, 0);
@@ -268,27 +289,30 @@ export const getAverageRating = (appName: string): number | null => {
 };
 
 // Utility functions
-export const deleteTest = (id: number): void => {
+export const deleteTest = (id: number, userId: string): void => {
   try {
-    const index = recentTests.findIndex(test => test.id === id);
+    const index = recentTests.findIndex(test => test.id === id && test.userId === userId);
     if (index !== -1) {
       recentTests.splice(index, 1);
     }
     
-    // Also delete associated test results
-    testResults = testResults.filter(result => result.testId !== id);
-    console.log(`Deleted test ${id} and associated results`);
+    testResults = testResults.filter(result => 
+      result.testId !== id && result.userId === userId
+    );
+    console.log(`Deleted test ${id} and associated results for user ${userId}`);
   } catch (error) {
     console.error('Error deleting test:', error);
   }
 };
 
-export const deleteReview = (id: number): void => {
+export const deleteReview = (id: number, userId: string): void => {
   try {
-    const index = reviews.findIndex(review => review.id === id);
+    const index = reviews.findIndex(review => 
+      review.id === id && review.userId === userId
+    );
     if (index !== -1) {
       reviews.splice(index, 1);
-      console.log(`Deleted review ${id}`);
+      console.log(`Deleted review ${id} for user ${userId}`);
     }
   } catch (error) {
     console.error('Error deleting review:', error);
@@ -316,3 +340,6 @@ export const clearAllReviews = (): void => {
     console.error('Error clearing reviews:', error);
   }
 };
+
+// Initialize with empty data (no sample data)
+initDatabase();

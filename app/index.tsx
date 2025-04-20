@@ -1,13 +1,15 @@
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'react-native';
 import { useState, useEffect } from 'react';
 import { getRecentTests, type RecentTest, getReviews } from '../lib/database';
+import { useAuth } from '../context/AuthContext';
 
 export default function HomeScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
+  const { user, logout } = useAuth(); // Get auth state and logout function
   const [recentTests, setRecentTests] = useState<RecentTest[]>([]);
   const [popularReviews, setPopularReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,16 +20,18 @@ export default function HomeScreen() {
   const secondaryText = colorScheme === 'dark' ? '#AAAAAA' : '#666666';
 
   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     const loadData = async () => {
       try {
-        // Load actual user-generated tests
-        const tests = getRecentTests(5);
+        const tests = getRecentTests(user.id, 5);
         setRecentTests(tests);
         
-        // Load actual user-generated reviews
         const reviews = await getReviews();
         setPopularReviews(reviews.slice(0, 3));
-        
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -36,7 +40,21 @@ export default function HomeScreen() {
     };
     
     loadData();
-  }, []);
+  }, [user]);
+
+  if (!user) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: textColor, marginBottom: 20 }}>Please login to continue</Text>
+        <TouchableOpacity 
+          style={styles.primaryButton}
+          onPress={() => router.push('/login')}
+        >
+          <Text style={styles.buttonText}>Go to Login</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   const getScoreColor = (score: number): string => {
     if (score >= 7) return '#27AE60';
@@ -108,6 +126,19 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
+  // Show loading indicator while checking auth state
+  if (loading) {
+    return (
+      <View style={[styles.container, { 
+        backgroundColor, 
+        justifyContent: 'center', 
+        alignItems: 'center' 
+      }]}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={[styles.container, { backgroundColor }]}>
       <View style={styles.header}>
@@ -116,6 +147,13 @@ export default function HomeScreen() {
         <Text style={[styles.subtitle, { color: textColor }]}>
           Detect bias in educational AI systems using research-backed methodologies
         </Text>
+        
+        {/* Display current user if logged in */}
+        {user && (
+          <Text style={[styles.userText, { color: secondaryText }]}>
+            Welcome, {user.username}
+          </Text>
+        )}
       </View>
 
       <View style={styles.buttonGroup}>
@@ -147,6 +185,17 @@ export default function HomeScreen() {
               Community
             </Text>
           </TouchableOpacity>
+          
+          {/* Add Logout Button */}
+          <TouchableOpacity 
+            style={[styles.secondaryButton, { borderColor: colorScheme === 'dark' ? '#444' : '#DDD' }]}
+            onPress={logout}
+          >
+            <Ionicons name="log-out-outline" size={20} color="#4A6EB5" />
+            <Text style={[styles.secondaryButtonText, { color: textColor }]}>
+              Logout
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -154,9 +203,7 @@ export default function HomeScreen() {
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: textColor }]}>Recent Evaluations</Text>
         
-        {loading ? (
-          <Text style={[styles.loadingText, { color: secondaryText }]}>Loading evaluations...</Text>
-        ) : recentTests.length > 0 ? (
+        {recentTests.length > 0 ? (
           <FlatList
             data={recentTests}
             renderItem={renderTestItem}
@@ -210,6 +257,7 @@ export default function HomeScreen() {
     </ScrollView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -385,5 +433,10 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
+  },
+  userText: {
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

@@ -42,7 +42,8 @@ export default function CommunityScreen() {
     
     setSubmitting(true);
     try {
-      await addReview(appName.trim(), rating, comment.trim());
+      const userId = 'exampleUserId'; // Replace with actual user ID logic
+      await addReview(appName.trim(), rating, comment.trim(), userId);
       setAppName('');
       setComment('');
       setRating(3);

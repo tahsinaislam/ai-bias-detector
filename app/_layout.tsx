@@ -1,10 +1,29 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AuthProvider, useAuth } from '../context/AuthContext';
+import { ActivityIndicator, View } from 'react-native';
+import { useEffect } from 'react';
 
-export default function Layout() {
+function LayoutContent() {
   const colorScheme = useColorScheme();
-  
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login');
+    }
+  }, [user, loading]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
     <Stack
       screenOptions={{
@@ -36,6 +55,15 @@ export default function Layout() {
       <Stack.Screen name="resources" options={{ title: 'Research Library' }} />
       <Stack.Screen name="settings" options={{ title: 'App Settings' }} />
       <Stack.Screen name="community" options={{ title: 'Community Reviews' }} />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
     </Stack>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <LayoutContent />
+    </AuthProvider>
   );
 }

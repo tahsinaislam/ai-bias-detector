@@ -108,10 +108,10 @@ export default function NewTestScreen() {
         appName.trim(),
         score,
         'FULL',
-        { 
+        JSON.stringify({ 
           protocols: Object.keys(testResults),
           results: testResults
-        }
+        })
       );
 
       // Save individual test results
