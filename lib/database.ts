@@ -27,11 +27,22 @@ export interface TestResult {
   timestamp: string;
 }
 
+export interface Review {
+  id: number;
+  appName: string;
+  rating: number;
+  comment: string;
+  author: string;
+  timestamp: string;
+}
+
 // In-memory storage
 let recentTests: RecentTest[] = [];
 let testResults: TestResult[] = [];
+let reviews: Review[] = [];
 let nextTestId = 1;
 let nextResultId = 1;
+let nextReviewId = 1;
 
 // Default templates
 const defaultTemplates: TestTemplate[] = [
@@ -85,7 +96,7 @@ const defaultTemplates: TestTemplate[] = [
   }
 ];
 
-// Database initialization - just a placeholder that doesn't do anything
+// Database initialization
 export const initDatabase = (): void => {
   console.log('In-memory database initialized');
 };
@@ -196,6 +207,66 @@ export const getTemplateById = (id: number): TestTemplate | null => {
   }
 };
 
+// Review functions
+export const addReview = (
+  appName: string,
+  rating: number,
+  comment: string,
+  author: string = 'Anonymous'
+): number => {
+  try {
+    const id = nextReviewId++;
+    
+    const newReview: Review = {
+      id,
+      appName,
+      rating,
+      comment,
+      author,
+      timestamp: new Date().toISOString()
+    };
+    
+    reviews.push(newReview);
+    console.log(`Added review ${id} for app ${appName}`);
+    return id;
+  } catch (error) {
+    console.error('Error adding review:', error);
+    return -1;
+  }
+};
+
+export const getReviews = (appName?: string): Review[] => {
+  try {
+    let filteredReviews = [...reviews];
+    
+    if (appName) {
+      filteredReviews = filteredReviews.filter(
+        review => review.appName.toLowerCase().includes(appName.toLowerCase())
+      );
+    }
+    
+    return filteredReviews.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  } catch (error) {
+    console.error('Error getting reviews:', error);
+    return [];
+  }
+};
+
+export const getAverageRating = (appName: string): number | null => {
+  try {
+    const appReviews = reviews.filter(review => review.appName === appName);
+    if (appReviews.length === 0) return null;
+    
+    const total = appReviews.reduce((sum, review) => sum + review.rating, 0);
+    return total / appReviews.length;
+  } catch (error) {
+    console.error('Error calculating average rating:', error);
+    return null;
+  }
+};
+
 // Utility functions
 export const deleteTest = (id: number): void => {
   try {
@@ -212,6 +283,18 @@ export const deleteTest = (id: number): void => {
   }
 };
 
+export const deleteReview = (id: number): void => {
+  try {
+    const index = reviews.findIndex(review => review.id === id);
+    if (index !== -1) {
+      reviews.splice(index, 1);
+      console.log(`Deleted review ${id}`);
+    }
+  } catch (error) {
+    console.error('Error deleting review:', error);
+  }
+};
+
 export const clearAllTests = (): void => {
   try {
     recentTests = [];
@@ -224,11 +307,12 @@ export const clearAllTests = (): void => {
   }
 };
 
-// Add sample data (empty function - not adding any sample data)
-export const addSampleData = (): void => {
-  // No sample data will be added
-  console.log('Sample data function called but no data will be added');
+export const clearAllReviews = (): void => {
+  try {
+    reviews = [];
+    nextReviewId = 1;
+    console.log('Cleared all reviews');
+  } catch (error) {
+    console.error('Error clearing reviews:', error);
+  }
 };
-
-// Initialize with sample data
-addSampleData();

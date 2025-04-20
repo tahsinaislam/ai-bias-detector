@@ -35,6 +35,7 @@ export default function Layout() {
       <Stack.Screen name="report" options={{ title: 'Assessment Report' }} />
       <Stack.Screen name="resources" options={{ title: 'Research Library' }} />
       <Stack.Screen name="settings" options={{ title: 'App Settings' }} />
+      <Stack.Screen name="community" options={{ title: 'Community Reviews' }} />
     </Stack>
   );
 }

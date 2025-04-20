@@ -1,14 +1,15 @@
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'react-native';
 import { useState, useEffect } from 'react';
-import { getRecentTests, type RecentTest, addSampleData } from '../lib/database';
+import { getRecentTests, type RecentTest, getReviews } from '../lib/database';
 
 export default function HomeScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const [recentTests, setRecentTests] = useState<RecentTest[]>([]);
+  const [popularReviews, setPopularReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   const backgroundColor = colorScheme === 'dark' ? '#121212' : '#F8F9FA';
@@ -17,29 +18,30 @@ export default function HomeScreen() {
   const secondaryText = colorScheme === 'dark' ? '#AAAAAA' : '#666666';
 
   useEffect(() => {
-    // Load recent tests from database
-    const loadTests = () => {
+    const loadData = async () => {
       try {
-        // Make sure we have some sample data
-        addSampleData();
-        
-        // Get the most recent tests
-        const tests = getRecentTests(10);
+        // Load actual user-generated tests
+        const tests = getRecentTests(5);
         setRecentTests(tests);
+        
+        // Load actual user-generated reviews
+        const reviews = await getReviews();
+        setPopularReviews(reviews.slice(0, 3));
+        
       } catch (error) {
-        console.error('Error loading tests:', error);
+        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
     };
     
-    loadTests();
+    loadData();
   }, []);
 
   const getScoreColor = (score: number): string => {
-    if (score >= 7) return '#27AE60'; // Green for good scores
-    if (score >= 4) return '#F39C12'; // Orange for medium scores
-    return '#E74C3C'; // Red for poor scores
+    if (score >= 7) return '#27AE60';
+    if (score >= 4) return '#F39C12';
+    return '#E74C3C';
   };
 
   const formatDate = (dateString: string): string => {
@@ -53,7 +55,6 @@ export default function HomeScreen() {
     return `${Math.floor(diffInSeconds / 86400)} days ago`;
   };
 
-  // Render a test item
   const renderTestItem = ({ item }: { item: RecentTest }) => (
     <TouchableOpacity 
       style={[styles.testCard, { backgroundColor: cardBackground }]}
@@ -76,8 +77,39 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
+  const renderReviewItem = ({ item }: { item: any }) => (
+    <TouchableOpacity 
+      style={[styles.reviewCard, { backgroundColor: cardBackground }]}
+      onPress={() => router.push('/community')}
+    >
+      <Text style={[styles.reviewAppName, { color: textColor }]}>
+        {item.appName}
+      </Text>
+      <View style={styles.starContainer}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Ionicons
+            key={star}
+            name={star <= item.rating ? 'star' : 'star-outline'}
+            size={16}
+            color="#FFD700"
+          />
+        ))}
+      </View>
+      <Text 
+        style={[styles.reviewText, { color: textColor }]}
+        numberOfLines={2}
+        ellipsizeMode="tail"
+      >
+        {item.comment}
+      </Text>
+      <Text style={[styles.reviewAuthor, { color: secondaryText }]}>
+        - {item.author}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
-    <View style={[styles.container, { backgroundColor }]}>
+    <ScrollView style={[styles.container, { backgroundColor }]}>
       <View style={styles.header}>
         <Ionicons name="shield-checkmark" size={48} color="#4A6EB5" />
         <Text style={[styles.title, { color: textColor }]}>Ethical AI Evaluator</Text>
@@ -95,18 +127,31 @@ export default function HomeScreen() {
           <Text style={styles.buttonText}>Start New Evaluation</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.secondaryButton, { borderColor: colorScheme === 'dark' ? '#444' : '#DDD' }]}
-          onPress={() => router.push('/resources')}
-        >
-          <Ionicons name="library" size={20} color="#4A6EB5" />
-          <Text style={[styles.secondaryButtonText, { color: textColor }]}>
-            Research Library
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.secondaryButtonsRow}>
+          <TouchableOpacity 
+            style={[styles.secondaryButton, { borderColor: colorScheme === 'dark' ? '#444' : '#DDD' }]}
+            onPress={() => router.push('/resources')}
+          >
+            <Ionicons name="library" size={20} color="#4A6EB5" />
+            <Text style={[styles.secondaryButtonText, { color: textColor }]}>
+              Research
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.secondaryButton, { borderColor: colorScheme === 'dark' ? '#444' : '#DDD' }]}
+            onPress={() => router.push('/community')}
+          >
+            <Ionicons name="people" size={20} color="#4A6EB5" />
+            <Text style={[styles.secondaryButtonText, { color: textColor }]}>
+              Community
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <View style={styles.recentTestsSection}>
+      {/* Recent Evaluations Section */}
+      <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: textColor }]}>Recent Evaluations</Text>
         
         {loading ? (
@@ -116,7 +161,7 @@ export default function HomeScreen() {
             data={recentTests}
             renderItem={renderTestItem}
             keyExtractor={(item) => item.id.toString()}
-            showsVerticalScrollIndicator={false}
+            scrollEnabled={false}
             contentContainerStyle={styles.listContainer}
           />
         ) : (
@@ -125,19 +170,44 @@ export default function HomeScreen() {
             <Text style={[styles.emptyStateText, { color: textColor }]}>
               No evaluations yet
             </Text>
-            <Text style={[styles.emptyStateSubtext, { color: secondaryText }]}>
-              Start a new evaluation to see results here
+          </View>
+        )}
+      </View>
+
+      {/* Community Reviews Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: textColor }]}>Community Reviews</Text>
+          <TouchableOpacity onPress={() => router.push('/community')}>
+            <Text style={[styles.seeAllText, { color: '#4A6EB5' }]}>See All</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {popularReviews.length > 0 ? (
+          <FlatList
+            data={popularReviews}
+            renderItem={renderReviewItem}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalList}
+          />
+        ) : (
+          <View style={[styles.emptyState, { backgroundColor: cardBackground }]}>
+            <Ionicons name="chatbubble-outline" size={40} color={secondaryText} />
+            <Text style={[styles.emptyStateText, { color: textColor }]}>
+              No reviews yet
             </Text>
           </View>
         )}
       </View>
 
       <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colorScheme === 'dark' ? '#AAA' : '#666' }]}>
+        <Text style={[styles.footerText, { color: secondaryText }]}>
           Developed using UNESCO AI Education Guidelines
         </Text>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -174,7 +244,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -187,7 +257,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 10,
   },
+  secondaryButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
   secondaryButton: {
+    flex: 1,
     padding: 16,
     borderRadius: 10,
     borderWidth: 1,
@@ -200,18 +276,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 10,
   },
-  recentTestsSection: {
-    flex: 1,
-    marginTop: 8,
-    marginBottom: 16,
+  section: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 12,
+  },
+  seeAllText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   listContainer: {
     paddingBottom: 16,
+  },
+  horizontalList: {
+    paddingRight: 24,
   },
   testCard: {
     flexDirection: 'row',
@@ -249,6 +335,35 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+  reviewCard: {
+    width: 280,
+    padding: 16,
+    borderRadius: 10,
+    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  reviewAppName: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  starContainer: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  reviewText: {
+    fontSize: 14,
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  reviewAuthor: {
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
   loadingText: {
     textAlign: 'center',
     marginTop: 24,
@@ -258,17 +373,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
   },
   emptyStateText: {
     fontSize: 16,
     fontWeight: '500',
     marginTop: 12,
-  },
-  emptyStateSubtext: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 4,
   },
   footer: {
     alignItems: 'center',
