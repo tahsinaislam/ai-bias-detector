@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'react-native';
 import { useState, useEffect } from 'react';
-import { getRecentTests, type RecentTest, getReviews } from '../lib/database';
+import { getRecentTests, type RecentTest, getReviews, getAllTests } from '../lib/database';
 import { useAuth } from '../context/AuthContext';
 
 export default function HomeScreen() {
@@ -27,11 +27,13 @@ export default function HomeScreen() {
 
     const loadData = async () => {
       try {
-        const tests = getRecentTests(user.id, 5);
+        const tests = await getRecentTests();
+        console.log('Loaded tests:', tests);
         setRecentTests(tests);
         
         const reviews = await getReviews();
-        setPopularReviews(reviews.slice(0, 3));
+        console.log('Loaded reviews:', reviews);
+        setPopularReviews(reviews);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -76,7 +78,13 @@ export default function HomeScreen() {
   const renderTestItem = ({ item }: { item: RecentTest }) => (
     <TouchableOpacity 
       style={[styles.testCard, { backgroundColor: cardBackground }]}
-      onPress={() => router.push({ pathname: '/report', params: { testId: item.id } })}
+      onPress={() => router.push({ 
+        pathname: '/report', 
+        params: { 
+          testId: item.id.toString(),
+          userId: user.id // Make sure to pass userId to the report screen
+        } 
+      })}
     >
       <View style={styles.testInfo}>
         <Text style={[styles.testName, { color: textColor }]}>
@@ -126,7 +134,6 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
-  // Show loading indicator while checking auth state
   if (loading) {
     return (
       <View style={[styles.container, { 
@@ -148,7 +155,6 @@ export default function HomeScreen() {
           Detect bias in educational AI systems using research-backed methodologies
         </Text>
         
-        {/* Display current user if logged in */}
         {user && (
           <Text style={[styles.userText, { color: secondaryText }]}>
             Welcome, {user.username}
@@ -217,11 +223,13 @@ export default function HomeScreen() {
             <Text style={[styles.emptyStateText, { color: textColor }]}>
               No evaluations yet
             </Text>
+            <Text style={[styles.emptyStateText, { color: secondaryText, fontSize: 12, marginTop: 4 }]}>
+              Count: {recentTests.length}
+            </Text>
           </View>
         )}
       </View>
 
-      {/* Community Reviews Section */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: textColor }]}>Community Reviews</Text>
@@ -244,6 +252,9 @@ export default function HomeScreen() {
             <Ionicons name="chatbubble-outline" size={40} color={secondaryText} />
             <Text style={[styles.emptyStateText, { color: textColor }]}>
               No reviews yet
+            </Text>
+            <Text style={[styles.emptyStateText, { color: secondaryText, fontSize: 12, marginTop: 4 }]}>
+              Count: {popularReviews.length}
             </Text>
           </View>
         )}

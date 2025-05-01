@@ -84,7 +84,6 @@ export default function NewTestScreen() {
     const completedTests = Object.keys(testResults).length;
     if (completedTests === 0) return;
     
-    // Validate app name
     if (!appName.trim()) {
       setNameError(true);
       Alert.alert(
@@ -95,37 +94,36 @@ export default function NewTestScreen() {
       return;
     }
     
-    // Clear any previous errors
     setNameError(false);
     
     try {
-      // Calculate score (0-10 scale)
       const passCount = Object.values(testResults).filter(r => r === 'PASS').length;
       const score = (passCount / completedTests) * 10;
       
-      // Save the test in the database
+
       const testId = await addRecentTest(
         appName.trim(),
         score,
         'FULL',
-        JSON.stringify({ 
+        { 
           protocols: Object.keys(testResults),
           results: testResults
-        })
+        }
       );
 
-      // Save individual test results
-      // Use templateId as 1 for all tests for simplicity
+
       for (const [testKey, result] of Object.entries(testResults)) {
+        const templateId = TEST_PROTOCOLS.findIndex(p => p.id === testKey) + 1;
+        
         await addTestResult(
           testId,
-          1, // templateId - using 1 as a placeholder
+          templateId > 0 ? templateId : 1, 
           result,
           `Notes for ${testKey}: ${currentNotes}`
         );
       }
 
-      // Navigate to report screen with test ID
+
       router.push({
         pathname: '/report',
         params: { 
@@ -134,7 +132,11 @@ export default function NewTestScreen() {
       });
     } catch (error) {
       console.error('Error generating report:', error);
-      // You might want to show an error to the user here
+      Alert.alert(
+        "Error", 
+        "Failed to generate report. Please try again.",
+        [{ text: "OK" }]
+      );
     }
   };
 

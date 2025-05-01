@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getTestById, getTestResults } from '../lib/database';
+import { getTestById, getTestResults, getAllTests, getAllTestResults } from '../lib/database';
 
 interface ReportParams {
   testId?: string;
+  userId?: string;
 }
 
 export default function ReportScreen() {
@@ -16,6 +17,42 @@ export default function ReportScreen() {
   const [score, setScore] = useState<number | null>(null);
   const [testDetails, setTestDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  const DEFAULT_USER_ID = "default-user-id";
+
+  const debugTestData = async () => {
+    try {
+      if (!params.testId) {
+        console.log('No testId provided in params');
+        return;
+      }
+      
+      console.log('Report params:', params);
+      
+      const testId = parseInt(params.testId);
+      console.log('Looking for test with ID:', testId);
+      
+      const allTests = await getAllTests();
+      console.log('All tests in database:', allTests);
+      
+      const foundTest = allTests.find(t => t.id === testId);
+      console.log('Found test with matching ID:', foundTest);
+      
+      if (foundTest) {
+        console.log('Test details:', foundTest.details);
+      }
+      
+      // Check all test results in database
+      const allResults = await getAllTestResults();
+      console.log('All test results:', allResults);
+      
+      // Check if any test results exist for this testId
+      const matchingResults = allResults.filter(r => r.testId === testId);
+      console.log('Matching test results:', matchingResults);
+    } catch (error) {
+      console.error('Error in debug function:', error);
+    }
+  };
 
   useEffect(() => {
     const loadTestData = async () => {
@@ -27,14 +64,28 @@ export default function ReportScreen() {
       try {
         const testId = parseInt(params.testId);
         
-        // Get test data from database
+        // Get userId from params or use default
+        const userId = params.userId || DEFAULT_USER_ID;
+        
+        // Run debug to help diagnose issues
+        await debugTestData();
+        
+        // Get test data from database with both required parameters
         const testData = await getTestById(testId);
         if (testData) {
           setScore(testData.score);
           setTestDetails(testData.details);
+          console.log('Successfully loaded test data:', testData);
+        } else {
+          console.log('Test data not found for id:', testId, 'and userId:', userId);
+          Alert.alert(
+            "Test Not Found", 
+            "The requested test report could not be found. Please try again.",
+            [{ text: "OK", onPress: () => router.push('/') }]
+          );
         }
         
-        // Get test results
+        // Get test results with both required parameters
         const results = await getTestResults(testId);
         console.log('Test results:', results);
         
@@ -42,11 +93,16 @@ export default function ReportScreen() {
       } catch (error) {
         console.error('Error loading test data:', error);
         setLoading(false);
+        Alert.alert(
+          "Error", 
+          "Failed to load report data. Please try again.",
+          [{ text: "OK", onPress: () => router.push('/') }]
+        );
       }
     };
 
     loadTestData();
-  }, [params.testId]);
+  }, [params.testId, params.userId]);
 
   const getScoreColor = (score: number) => {
     if (score >= 8) return '#4CAF50';

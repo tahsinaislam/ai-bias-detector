@@ -88,7 +88,6 @@ export default function CommunityScreen() {
           onChangeText={(text) => {
             setAppName(text);
             if (text.trim()) {
-              // When app name changes, search for reviews
               loadReviews();
             }
           }}

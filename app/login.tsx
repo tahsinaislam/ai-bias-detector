@@ -1,4 +1,3 @@
-// app/login.tsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -7,13 +6,18 @@ import { useColorScheme } from 'react-native';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
-  const { login } = useAuth();
+  const [password, setPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+  const { login, register } = useAuth();
   const router = useRouter();
   const colorScheme = useColorScheme();
 
-  const handleLogin = async () => {
-    if (username.trim()) {
-      await login(username);
+  const handleAuth = async () => {
+    const success = isLogin 
+      ? await login(username, password)
+      : await register(username, password);
+    
+    if (success) {
       router.replace('/');
     }
   };
@@ -21,7 +25,7 @@ export default function LoginScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colorScheme === 'dark' ? '#121212' : '#F8F9FA' }]}>
       <Text style={[styles.title, { color: colorScheme === 'dark' ? '#FFFFFF' : '#000000' }]}>
-        Enter Your Username
+        {isLogin ? 'Login' : 'Register'}
       </Text>
       
       <TextInput
@@ -32,14 +36,34 @@ export default function LoginScreen() {
         placeholder="Username"
         value={username}
         onChangeText={setUsername}
+        autoCapitalize="none"
       />
       
-      <TouchableOpacity 
+      <TextInput
+        style={[styles.input, { 
+          backgroundColor: colorScheme === 'dark' ? '#252525' : '#FFFFFF',
+          color: colorScheme === 'dark' ? '#FFFFFF' : '#000000'
+        }]}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+      
+      <TouchableOpacity
         style={styles.button}
-        onPress={handleLogin}
-        disabled={!username.trim()}
+        onPress={handleAuth}
+        disabled={!username.trim() || !password.trim()}
       >
-        <Text style={styles.buttonText}>Continue</Text>
+        <Text style={styles.buttonText}>
+          {isLogin ? 'Login' : 'Register'}
+        </Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+        <Text style={[styles.toggleText, { color: colorScheme === 'dark' ? '#4A6EB5' : '#2E5AA7' }]}>
+          {isLogin ? 'Need an account? Register' : 'Have an account? Login'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -73,5 +97,9 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  toggleText: {
+    textAlign: 'center',
+    marginTop: 15,
   },
 });

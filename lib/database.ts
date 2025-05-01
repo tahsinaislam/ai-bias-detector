@@ -1,11 +1,10 @@
-// Type definitions
+
 export interface RecentTest {
   id: number;
   name: string;
   date: string;
   score: number;
   testType: string;
-  userId: string;
   details?: Record<string, unknown>;
 }
 
@@ -25,7 +24,6 @@ export interface TestResult {
   templateId: number;
   result: 'PASS' | 'FAIL' | 'WARNING';
   notes: string;
-  userId: string;
   timestamp: string;
 }
 
@@ -35,11 +33,9 @@ export interface Review {
   rating: number;
   comment: string;
   author: string;
-  userId: string;
   timestamp: string;
 }
 
-// In-memory storage
 let recentTests: RecentTest[] = [];
 let testResults: TestResult[] = [];
 let reviews: Review[] = [];
@@ -47,7 +43,6 @@ let nextTestId = 1;
 let nextResultId = 1;
 let nextReviewId = 1;
 
-// Default templates
 const defaultTemplates: TestTemplate[] = [
   {
     id: 1,
@@ -99,17 +94,15 @@ const defaultTemplates: TestTemplate[] = [
   }
 ];
 
-// Database initialization
+
 export const initDatabase = (): void => {
   console.log('In-memory database initialized');
 };
 
-// Test management functions
 export const addRecentTest = (
   name: string, 
   score: number,
   testType: string,
-  userId: string,
   details: Record<string, unknown> = {}
 ): number => {
   try {
@@ -121,12 +114,11 @@ export const addRecentTest = (
       date: new Date().toISOString(),
       score,
       testType,
-      userId,
       details
     };
     
     recentTests.push(newTest);
-    console.log(`Added test ${id}: ${name} for user ${userId}`);
+    console.log(`Added test ${id}: ${name}`);
     return id;
   } catch (error) {
     console.error('Error adding test:', error);
@@ -134,10 +126,9 @@ export const addRecentTest = (
   }
 };
 
-export const getRecentTests = (userId: string, limit: number = 5): RecentTest[] => {
+export const getRecentTests = (limit: number = 5): RecentTest[] => {
   try {
     return [...recentTests]
-      .filter(test => test.userId === userId)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, limit);
   } catch (error) {
@@ -146,21 +137,28 @@ export const getRecentTests = (userId: string, limit: number = 5): RecentTest[] 
   }
 };
 
-export const getTestById = (id: number, userId: string): RecentTest | null => {
+export const getTestById = (id: number): RecentTest | null => {
   try {
-    return recentTests.find(test => test.id === id && test.userId === userId) || null;
+    return recentTests.find(test => test.id === id) || null;
   } catch (error) {
     console.error('Error getting test by ID:', error);
     return null;
   }
 };
 
-// Test result functions
+export const getAllTests = (): RecentTest[] => {
+  try {
+    return [...recentTests];
+  } catch (error) {
+    console.error('Error getting all tests:', error);
+    return [];
+  }
+};
+
 export const addTestResult = (
   testId: number,
   templateId: number,
   result: 'PASS' | 'FAIL' | 'WARNING',
-  userId: string,
   notes: string = ''
 ): number => {
   try {
@@ -172,12 +170,11 @@ export const addTestResult = (
       templateId,
       result,
       notes,
-      userId,
       timestamp: new Date().toISOString()
     };
     
     testResults.push(newResult);
-    console.log(`Added test result ${id} for test ${testId} by user ${userId}`);
+    console.log(`Added test result ${id} for test ${testId}`);
     return id;
   } catch (error) {
     console.error('Error adding test result:', error);
@@ -185,10 +182,10 @@ export const addTestResult = (
   }
 };
 
-export const getTestResults = (testId: number, userId: string): TestResult[] => {
+export const getTestResults = (testId: number): TestResult[] => {
   try {
     return testResults
-      .filter(result => result.testId === testId && result.userId === userId)
+      .filter(result => result.testId === testId)
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   } catch (error) {
     console.error('Error getting test results:', error);
@@ -196,7 +193,16 @@ export const getTestResults = (testId: number, userId: string): TestResult[] => 
   }
 };
 
-// Template functions
+
+export const getAllTestResults = (): TestResult[] => {
+  try {
+    return [...testResults];
+  } catch (error) {
+    console.error('Error getting all test results:', error);
+    return [];
+  }
+};
+
 export const getTestTemplates = (): TestTemplate[] => {
   try {
     return [...defaultTemplates];
@@ -215,12 +221,10 @@ export const getTemplateById = (id: number): TestTemplate | null => {
   }
 };
 
-// Review functions
 export const addReview = (
   appName: string,
   rating: number,
   comment: string,
-  userId: string,
   author: string = 'Anonymous'
 ): number => {
   try {
@@ -232,12 +236,11 @@ export const addReview = (
       rating,
       comment,
       author,
-      userId,
       timestamp: new Date().toISOString()
     };
     
     reviews.push(newReview);
-    console.log(`Added review ${id} for app ${appName} by user ${userId}`);
+    console.log(`Added review ${id} for app ${appName}`);
     return id;
   } catch (error) {
     console.error('Error adding review:', error);
@@ -245,19 +248,13 @@ export const addReview = (
   }
 };
 
-export const getReviews = (options?: { appName?: string; userId?: string }): Review[] => {
+export const getReviews = (options?: { appName?: string }): Review[] => {
   try {
     let filteredReviews = [...reviews];
     
     if (options?.appName) {
       filteredReviews = filteredReviews.filter(
         review => review.appName.toLowerCase().includes((options.appName ?? '').toLowerCase())
-      );
-    }
-    
-    if (options?.userId) {
-      filteredReviews = filteredReviews.filter(
-        review => review.userId === options.userId
       );
     }
     
@@ -270,13 +267,18 @@ export const getReviews = (options?: { appName?: string; userId?: string }): Rev
   }
 };
 
-export const getAverageRating = (appName: string, userId?: string): number | null => {
+export const getAllReviews = (): Review[] => {
   try {
-    let appReviews = reviews.filter(review => review.appName === appName);
-    
-    if (userId) {
-      appReviews = appReviews.filter(review => review.userId === userId);
-    }
+    return [...reviews];
+  } catch (error) {
+    console.error('Error getting all reviews:', error);
+    return [];
+  }
+};
+
+export const getAverageRating = (appName: string): number | null => {
+  try {
+    const appReviews = reviews.filter(review => review.appName === appName);
     
     if (appReviews.length === 0) return null;
     
@@ -288,31 +290,26 @@ export const getAverageRating = (appName: string, userId?: string): number | nul
   }
 };
 
-// Utility functions
-export const deleteTest = (id: number, userId: string): void => {
+export const deleteTest = (id: number): void => {
   try {
-    const index = recentTests.findIndex(test => test.id === id && test.userId === userId);
+    const index = recentTests.findIndex(test => test.id === id);
     if (index !== -1) {
       recentTests.splice(index, 1);
     }
     
-    testResults = testResults.filter(result => 
-      result.testId !== id && result.userId === userId
-    );
-    console.log(`Deleted test ${id} and associated results for user ${userId}`);
+    testResults = testResults.filter(result => result.testId !== id);
+    console.log(`Deleted test ${id} and associated results`);
   } catch (error) {
     console.error('Error deleting test:', error);
   }
 };
 
-export const deleteReview = (id: number, userId: string): void => {
+export const deleteReview = (id: number): void => {
   try {
-    const index = reviews.findIndex(review => 
-      review.id === id && review.userId === userId
-    );
+    const index = reviews.findIndex(review => review.id === id);
     if (index !== -1) {
       reviews.splice(index, 1);
-      console.log(`Deleted review ${id} for user ${userId}`);
+      console.log(`Deleted review ${id}`);
     }
   } catch (error) {
     console.error('Error deleting review:', error);
@@ -341,5 +338,5 @@ export const clearAllReviews = (): void => {
   }
 };
 
-// Initialize with empty data (no sample data)
+
 initDatabase();

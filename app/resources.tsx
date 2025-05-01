@@ -27,7 +27,7 @@ const RESOURCES = [
   {
     title: "AI Fairness 360 Toolkit",
     description: "Open-source library with 70+ fairness metrics from IBM Research",
-    url: "https://aif360.mybluemix.net/",
+    url: "https://aix360.res.ibm.com/",
     icon: "hammer",
     category: "Tool"
   },
