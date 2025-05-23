@@ -1,50 +1,182 @@
-# Welcome to your Expo app 👋
+# AI Bias Detector for Educational AI Systems
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile application prototype designed to help teachers identify and address bias in AI-driven educational technologies through accessible evaluation tools and community-driven insights.
 
-## Get started
+## 📋 Abstract
 
-1. Install dependencies
+The increasing integration of artificial intelligence (AI) in education has raised concerns about algorithmic bias and its impact on student outcomes. Despite growing awareness, many educators lack accessible tools to detect and mitigate bias in AI-driven educational technologies. This project presents the development of a mobile application designed to help teachers identify AI bias using research-backed methodologies, incorporating UNESCO and OECD AI ethics guidelines.
 
-   ```bash
-   npm install
-   ```
+## 🎯 Problem Statement
 
-2. Start the app
+AI systems in education often inherit biases present in their training data, potentially reinforcing harmful stereotypes or leading to inequitable outcomes for students. Studies reveal that AI systems frequently perpetuate biases related to gender, race, and socioeconomic status. This application addresses the critical gap between complex technical bias detection solutions and the practical needs of educators.
 
-   ```bash
-    npx expo start
-   ```
+## 🚀 Live Application
 
-In the output, you'll find options to open the app in a
+**Access the application:** [https://ai-bias-detector--k2vj1rntpa.expo.app](https://ai-bias-detector--k2vj1rntpa.expo.app)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Getting Started
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+1. Visit the login page: [https://ai-bias-detector--hz0e8wgzop.expo.app/login](https://ai-bias-detector--hz0e8wgzop.expo.app/login)
+2. Tap "Need an account? Register" at the bottom
+3. Enter a username and password
+4. Tap "Register"
+5. You'll automatically be logged in and redirected to the home screen
 
-## Get a fresh project
+## ✨ Key Features
 
-When you're ready, run:
+### 🔍 Bias Detection Module
+- **Structured Assessment Workflows**: Guided evaluation protocols for three primary bias types:
+  - **Gender Bias**: Detection of stereotypical gender associations in AI outputs
+  - **Cultural Bias**: Identification of representation imbalances and cultural assumptions
+  - **Privacy & Data Handling**: Assessment of AI systems' compliance with educational privacy standards
+- **Simple Scoring System**: PASS/FAIL evaluation approach for accessibility
+- **Step-by-Step Guidance**: Break down complex evaluation processes into manageable tasks
 
-```bash
-npm run reset-project
+### 👥 Community Features
+- **Review System**: Structured interface for submitting and viewing AI tool evaluations
+- **Rating Mechanism**: 5-star rating system for quick assessment of AI tool quality
+- **Experience Sharing**: Platform for educators to share findings and insights
+- **Filtering Functionality**: Find relevant reviews based on AI tool names
+
+### 📚 Resource Library
+- **Curated Educational Materials**: Access to authoritative resources on AI ethics in education
+- **UNESCO & OECD Guidelines**: Integration of international AI ethics frameworks
+- **Reference Materials**: High-quality resources from recognized research institutions
+
+## 🛠️ Technical Implementation
+
+### Technology Stack
+- **Frontend**: React Native (v0.72.3) for cross-platform mobile development
+- **Navigation**: Expo Router for seamless screen transitions
+- **State Management**: React Context API for authentication, local component state for screen-specific data
+- **Data Storage**: In-memory storage (designed for future SQLite integration)
+- **Platform**: iOS and Android compatible through single codebase
+
+### Architecture
+```
+├── Authentication System
+│   ├── Simplified user management
+│   └── Username-based login (prototype stage)
+├── Bias Detection Module
+│   ├── Structured evaluation protocols
+│   ├── Guided assessment workflows
+│   └── Binary scoring system
+├── Community Platform
+│   ├── Review submission system
+│   ├── Rating mechanism
+│   └── Content filtering
+└── Resource Library
+    ├── Curated content access
+    └── External resource linking
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Design Principles
+- **Mobile-First**: Optimized for devices commonly available in educational settings
+- **Accessibility**: Usable by teachers without technical expertise in AI or data science
+- **Adaptive Interface**: Supports both light and dark modes for various usage environments
+- **Learnability**: Step-by-step workflows with visual cues and descriptive guidance
 
-## Learn more
+## 📊 Research Foundation
 
-To learn more about developing your project with Expo, look at the following resources:
+### Theoretical Framework
+Based on UNESCO AI Education Guidelines (2021) with four key evaluation domains:
+1. **Data Representation and Equity**
+2. **Algorithmic Fairness and Transparency**
+3. **Educational Appropriateness and Inclusivity**
+4. **Governance and Accountability**
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Supporting Research
+- Mobile platforms achieve significantly higher engagement rates among teachers compared to web platforms
+- Community-based approaches to AI governance in education show greater effectiveness than isolated expert models
+- Teachers prefer streamlined interfaces with clear guidance and step-by-step workflows
 
-## Join the community
+## 🎥 Demo
 
-Join our community of developers creating universal apps.
+Watch the project presentation: [Loom Video](https://www.loom.com/share/c66061fd97a8443bb15c90abab6dc61d?sid=709e259c-aec6-44d5-ae73-f70da970833c)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 📝 Usage Instructions
+
+### For Individual Teachers
+1. **Start New Evaluation**: Begin bias assessment of an AI tool using guided protocols
+2. **Follow Assessment Steps**: Complete structured evaluation for gender, cultural, and privacy bias
+3. **Review Results**: Receive immediate feedback on assessment progress
+4. **Access Resources**: Explore educational materials on AI ethics
+
+### For Community Engagement
+1. **Share Experiences**: Submit reviews and ratings for AI tools you've evaluated
+2. **Learn from Others**: Browse community reviews to identify potentially problematic tools
+3. **Collaborative Learning**: Engage with other educators' findings and insights
+
+## ⚠️ Current Limitations
+
+### Technical Limitations
+- **Prototype Status**: Simplified implementation focused on concept demonstration
+- **Limited Bias Types**: Focuses on three primary bias categories (gender, cultural, privacy)
+- **Binary Assessment**: PASS/FAIL system may miss subtle bias manifestations
+- **In-Memory Storage**: Data persistence requires future database implementation
+- **Basic Authentication**: Simple username system without production-level security
+
+### Scope Limitations
+- **Educational Context**: Does not differentiate between K-12 and higher education settings
+- **Cultural Framework**: Based primarily on Western conceptualizations of fairness
+- **Digital Literacy**: Assumes baseline mobile technology familiarity among users
+- **Community Moderation**: Lacks comprehensive content moderation tools
+
+## 🔮 Future Development
+
+### Enhanced Functionality
+- **Advanced Bias Detection**: More sophisticated protocols with validated accuracy
+- **Database Integration**: Persistent storage with data synchronization capabilities
+- **Security Implementation**: Production-ready authentication and data protection
+- **Expanded Bias Categories**: Include socioeconomic and linguistic bias detection
+
+### User Experience Improvements
+- **Empirical Validation**: Comprehensive usability testing with diverse teacher populations
+- **Cultural Adaptation**: Incorporate diverse cultural frameworks for global contexts
+- **Accessibility Enhancements**: Support for varying levels of digital literacy
+
+### Community Platform Evolution
+- **Moderation Tools**: Comprehensive content quality assurance
+- **Collaborative Features**: Structured case studies and group evaluation workflows
+- **Institutional Integration**: Potential integration with school district systems
+
+## 👩‍💻 Author
+
+**Tahsina Islam**  
+📧 tislam36@gatech.edu  
+🎓 Georgia Institute of Technology
+
+## 📁 Project Structure
+
+```
+final-project-code/
+├── src/
+│   ├── screens/
+│   │   ├── login.tsx          # Authentication interface
+│   │   ├── index.tsx          # Dashboard/home screen
+│   │   ├── evaluation.tsx     # Bias assessment workflows
+│   │   ├── community.tsx      # Review and rating system
+│   │   └── resources.tsx      # Educational resource library
+│   ├── components/            # Reusable UI components
+│   └── utils/                 # Helper functions and utilities
+├── Final Paper.pdf            # Complete research documentation
+├── Final Presentation.pdf     # Project presentation materials
+└── Catalog.pdf               # Project content and access instructions
+```
+
+## 🔗 References
+
+This implementation is grounded in peer-reviewed research including:
+- UNESCO AI Education Guidelines (2021)
+- OECD AI Ethics Frameworks
+- Mobile learning effectiveness studies (Brown & Davis, 2022)
+- Teacher technology adoption research
+- AI bias detection methodologies in educational contexts
+
+## 🤝 Contributing
+
+This is a research prototype developed as part of an academic project. The implementation demonstrates concept viability and establishes a foundation for future development in making AI ethics actionable in educational contexts.
+
+---
+
+*This project contributes to both practice and research by demonstrating how technical solutions can bridge the gap between AI ethics principles and practical educational needs, laying groundwork for future work in educator empowerment for AI oversight.*
